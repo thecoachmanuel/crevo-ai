@@ -1,4 +1,4 @@
-import { mutation } from "./_generated/server";
+import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 import { PLANS } from "../src/lib/plans";
 
@@ -36,7 +36,6 @@ export const fulfillPurchase = mutation({
   },
 });
 
-import { query } from "./_generated/server";
 
 export const current = query({
   args: { token: v.string() },
