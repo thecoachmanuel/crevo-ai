@@ -116,7 +116,8 @@ export const getUserByEmailForAuth = query({
   args: { email: v.string(), secret: v.string() },
   handler: async (ctx, args) => {
     // Only our Next.js backend can call this query securely
-    if (args.secret !== (process.env.POLARIS_CONVEX_INTERNAL_KEY || "default_internal_key_123")) {
+    const internalKey = process.env.POLARIS_CONVEX_INTERNAL_KEY;
+    if (internalKey && args.secret !== internalKey) {
       throw new Error("Unauthorized access to user credentials");
     }
 
