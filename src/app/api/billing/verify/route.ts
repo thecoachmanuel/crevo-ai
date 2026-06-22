@@ -4,7 +4,7 @@ import { ConvexHttpClient } from "convex/browser";
 import { api } from "../../../../../convex/_generated/api";
 import { Id } from "../../../../../convex/_generated/dataModel";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2026-05-27.dahlia" });
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "sk_test_dummy", { apiVersion: "2026-05-27.dahlia" });
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
 export async function GET(req: Request) {
