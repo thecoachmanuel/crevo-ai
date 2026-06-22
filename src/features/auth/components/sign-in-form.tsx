@@ -47,6 +47,19 @@ export const SignInForm = () => {
     }
   };
 
+  const handleDemoLogin = async () => {
+    setError("");
+    setIsLoading(true);
+    try {
+      const response = await fetch("/api/auth/demo", { method: "POST" });
+      if (!response.ok) throw new Error("Failed to login as demo user");
+      router.refresh();
+    } catch (err: any) {
+      setError(err.message || "Failed to login as demo user");
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="flex flex-col gap-4 mt-4 w-full">
       <form onSubmit={handleSubmit} className="flex flex-col gap-4 w-full">
@@ -101,6 +114,26 @@ export const SignInForm = () => {
           disabled={isLoading}
         >
           {isSignUp ? "Already have an account? Sign In" : "Don't have an account? Sign Up"}
+        </Button>
+        
+        <div className="relative my-2">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t" />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-background px-2 text-muted-foreground">
+              Or
+            </span>
+          </div>
+        </div>
+
+        <Button 
+          type="button" 
+          variant="secondary" 
+          onClick={handleDemoLogin}
+          disabled={isLoading}
+        >
+          Quick Test (Login as Demo User)
         </Button>
       </form>
 
