@@ -7,9 +7,10 @@ export const create = mutation({
   args: {
     projectId: v.id("projects"),
     title: v.string(),
+    token: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const identity = await verifyAuth(ctx);
+    const identity = await verifyAuth(ctx, args.token);
 
     const project = await ctx.db.get("projects", args.projectId);
 
@@ -34,9 +35,10 @@ export const create = mutation({
 export const getById = query({
   args: {
     id: v.id("conversations"),
+    token: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const identity = await verifyAuth(ctx);
+    const identity = await verifyAuth(ctx, args.token);
 
     const conversation = await ctx.db.get("conversations", args.id);
 
@@ -61,9 +63,10 @@ export const getById = query({
 export const getByProject = query({
   args: {
     projectId: v.id("projects"),
+    token: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const identity = await verifyAuth(ctx);
+    const identity = await verifyAuth(ctx, args.token);
 
     const project = await ctx.db.get("projects", args.projectId);
 
@@ -86,9 +89,10 @@ export const getByProject = query({
 export const getMessages = query({
   args: {
     conversationId: v.id("conversations"),
+    token: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const identity = await verifyAuth(ctx);
+    const identity = await verifyAuth(ctx, args.token);
 
     const conversation = await ctx.db.get("conversations", args.conversationId);
 

@@ -5,9 +5,9 @@ import { verifyAuth } from "./auth";
 import { Doc, Id } from "./_generated/dataModel";
 
 export const getFiles = query({
-  args: { projectId: v.id("projects") },
+  args: { projectId: v.id("projects"), token: v.optional(v.string()) },
   handler: async (ctx, args) => {
-    const identity = await verifyAuth(ctx);
+    const identity = await verifyAuth(ctx, args.token);
 
     const project = await ctx.db.get("projects", args.projectId);
 
@@ -27,9 +27,9 @@ export const getFiles = query({
 });
 
 export const getFile = query({
-  args: { id: v.id("files") },
+  args: { id: v.id("files"), token: v.optional(v.string()) },
   handler: async (ctx, args) => {
-    const identity = await verifyAuth(ctx);
+    const identity = await verifyAuth(ctx, args.token);
 
     const file = await ctx.db.get("files", args.id);
 
@@ -60,9 +60,9 @@ export const getFile = query({
  * Used for: Breadcrumbs navigation (src > components > button.tsx)
  */
 export const getFilePath = query({
-  args: { id: v.id("files") },
+  args: { id: v.id("files"), token: v.optional(v.string()) },
   handler: async (ctx, args) => {
-    const identity = await verifyAuth(ctx);
+    const identity = await verifyAuth(ctx, args.token);
 
     const file = await ctx.db.get("files", args.id);
 
@@ -101,9 +101,10 @@ export const getFolderContents = query({
   args: { 
     projectId: v.id("projects"),
     parentId: v.optional(v.id("files")),
+    token: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const identity = await verifyAuth(ctx);
+    const identity = await verifyAuth(ctx, args.token);
 
     const project = await ctx.db.get("projects", args.projectId);
 
@@ -142,9 +143,10 @@ export const createFile = mutation({
     parentId: v.optional(v.id("files")),
     name: v.string(),
     content: v.string(),
+    token: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const identity = await verifyAuth(ctx);
+    const identity = await verifyAuth(ctx, args.token);
 
     const project = await ctx.db.get("projects", args.projectId);
 
@@ -194,9 +196,10 @@ export const createFolder = mutation({
     projectId: v.id("projects"),
     parentId: v.optional(v.id("files")),
     name: v.string(),
+    token: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const identity = await verifyAuth(ctx);
+    const identity = await verifyAuth(ctx, args.token);
 
     const project = await ctx.db.get("projects", args.projectId);
 
@@ -244,9 +247,10 @@ export const renameFile = mutation({
   args: {
     id: v.id("files"),
     newName: v.string(),
+    token: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const identity = await verifyAuth(ctx);
+    const identity = await verifyAuth(ctx, args.token);
 
     const file = await ctx.db.get("files", args.id);
 
@@ -302,9 +306,10 @@ export const renameFile = mutation({
 export const deleteFile = mutation({
   args: {
     id: v.id("files"),
+    token: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const identity = await verifyAuth(ctx);
+    const identity = await verifyAuth(ctx, args.token);
 
     const file = await ctx.db.get("files", args.id);
 
@@ -365,9 +370,10 @@ export const updateFile = mutation({
   args: {
     id: v.id("files"),
     content: v.string(),
+    token: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const identity = await verifyAuth(ctx);
+    const identity = await verifyAuth(ctx, args.token);
 
     const file = await ctx.db.get("files", args.id);
 

@@ -10,9 +10,10 @@ export const updateSettings = mutation({
       installCommand: v.optional(v.string()),
       devCommand: v.optional(v.string()),
     }),
+    token: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const identity = await verifyAuth(ctx);
+    const identity = await verifyAuth(ctx, args.token);
 
     const project = await ctx.db.get("projects", args.id);
 
@@ -34,9 +35,10 @@ export const updateSettings = mutation({
 export const create = mutation({
   args: {
     name: v.string(),
+    token: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const identity = await verifyAuth(ctx);
+    const identity = await verifyAuth(ctx, args.token);
 
     const projectId = await ctx.db.insert("projects", {
       name: args.name,
@@ -51,9 +53,10 @@ export const create = mutation({
 export const getPartial = query({
   args: {
     limit: v.number(),
+    token: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const identity = await verifyAuth(ctx);
+    const identity = await verifyAuth(ctx, args.token);
 
     return await ctx.db
       .query("projects")
@@ -64,9 +67,11 @@ export const getPartial = query({
 });
 
 export const get = query({
-  args: {},
-  handler: async (ctx) => {
-    const identity = await verifyAuth(ctx);
+  args: {
+    token: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const identity = await verifyAuth(ctx, args.token);
 
     return await ctx.db
       .query("projects")
@@ -78,10 +83,11 @@ export const get = query({
 
 export const getById = query({
   args: {
-    id: v.id("projects")
+    id: v.id("projects"),
+    token: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const identity = await verifyAuth(ctx);
+    const identity = await verifyAuth(ctx, args.token);
 
     const project = await ctx.db.get("projects", args.id);
 
@@ -101,9 +107,10 @@ export const rename = mutation({
   args: {
     id: v.id("projects"),
     name: v.string(),
+    token: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const identity = await verifyAuth(ctx);
+    const identity = await verifyAuth(ctx, args.token);
 
     const project = await ctx.db.get("projects", args.id);
 

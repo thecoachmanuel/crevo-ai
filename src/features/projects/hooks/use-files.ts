@@ -1,6 +1,7 @@
 import { useMutation, useQuery } from "convex/react";
 import { Id } from "../../../../convex/_generated/dataModel";
 import { api } from "../../../../convex/_generated/api";
+import { getSessionToken } from "@/lib/client-auth";
 
 // Sort: folders first, then files, alphabetically within each group
 const sortFiles = <T extends { type: "file" | "folder"; name: string }>(
@@ -14,27 +15,36 @@ const sortFiles = <T extends { type: "file" | "folder"; name: string }>(
 };
 
 export const useFiles = (projectId: Id<"projects"> | null) => {
-  return useQuery(api.files.getFiles, projectId ? { projectId } : "skip");
+  const token = getSessionToken();
+  return useQuery(api.files.getFiles, projectId ? { projectId, token } : "skip");
 };
 
 export const useFile = (fileId: Id<"files"> | null) => {
-  return useQuery(api.files.getFile, fileId ? { id: fileId } : "skip");
+  const token = getSessionToken();
+  return useQuery(api.files.getFile, fileId ? { id: fileId, token } : "skip");
 };
 
 export const useFilePath = (fileId: Id<"files"> | null) => {
-  return useQuery(api.files.getFilePath, fileId ? { id: fileId } : "skip");
+  const token = getSessionToken();
+  return useQuery(api.files.getFilePath, fileId ? { id: fileId, token } : "skip");
 };
 
 export const useUpdateFile = () => {
-  return useMutation(api.files.updateFile);
+  const mutation = useMutation(api.files.updateFile);
+  return async (args: { id: Id<"files">; content: string }) => {
+    const token = getSessionToken();
+    return mutation({ ...args, token });
+  };
 };
  
 export const useCreateFile = () => {
-  return useMutation(api.files.createFile).withOptimisticUpdate(
+  const mutation = useMutation(api.files.createFile).withOptimisticUpdate(
     (localStore, args) => {
+      const token = getSessionToken();
       const existingFiles = localStore.getQuery(api.files.getFolderContents, {
         projectId: args.projectId,
         parentId: args.parentId,
+        token,
       });
 
       if (existingFiles !== undefined) {
@@ -53,20 +63,27 @@ export const useCreateFile = () => {
 
         localStore.setQuery(
           api.files.getFolderContents,
-          { projectId: args.projectId, parentId: args.parentId },
+          { projectId: args.projectId, parentId: args.parentId, token },
           sortFiles([...existingFiles, newFile])
         );
       }
     }
   );
+
+  return async (args: { projectId: Id<"projects">; parentId?: Id<"files">; name: string; content: string }) => {
+    const token = getSessionToken();
+    return mutation({ ...args, token });
+  };
 };
 
 export const useCreateFolder = () => {
-  return useMutation(api.files.createFolder).withOptimisticUpdate(
+  const mutation = useMutation(api.files.createFolder).withOptimisticUpdate(
     (localStore, args) => {
+      const token = getSessionToken();
       const existingFiles = localStore.getQuery(api.files.getFolderContents, {
         projectId: args.projectId,
         parentId: args.parentId,
+        token,
       });
 
       if (existingFiles !== undefined) {
@@ -84,12 +101,17 @@ export const useCreateFolder = () => {
 
         localStore.setQuery(
           api.files.getFolderContents,
-          { projectId: args.projectId, parentId: args.parentId },
+          { projectId: args.projectId, parentId: args.parentId, token },
           sortFiles([...existingFiles, newFolder])
         );
       }
     }
   );
+
+  return async (args: { projectId: Id<"projects">; parentId?: Id<"files">; name: string }) => {
+    const token = getSessionToken();
+    return mutation({ ...args, token });
+  };
 };
 
 export const useRenameFile = ({
@@ -99,11 +121,13 @@ export const useRenameFile = ({
   projectId: Id<"projects">;
   parentId?: Id<"files">;
 }) => {
-  return useMutation(api.files.renameFile).withOptimisticUpdate(
+  const mutation = useMutation(api.files.renameFile).withOptimisticUpdate(
     (localStore, args) => {
+      const token = getSessionToken();
       const existingFiles = localStore.getQuery(api.files.getFolderContents, {
         projectId,
         parentId,
+        token,
       });
 
       if (existingFiles !== undefined) {
@@ -113,12 +137,17 @@ export const useRenameFile = ({
 
         localStore.setQuery(
           api.files.getFolderContents,
-          { projectId, parentId },
+          { projectId, parentId, token },
           sortFiles(updatedFiles)
         );
       }
     }
-  )
+  );
+
+  return async (args: { id: Id<"files">; newName: string }) => {
+    const token = getSessionToken();
+    return mutation({ ...args, token });
+  };
 };
 
 export const useDeleteFile = ({
@@ -128,22 +157,29 @@ export const useDeleteFile = ({
   projectId: Id<"projects">;
   parentId?: Id<"files">;
 }) => {
-  return useMutation(api.files.deleteFile).withOptimisticUpdate(
+  const mutation = useMutation(api.files.deleteFile).withOptimisticUpdate(
     (localStore, args) => {
+      const token = getSessionToken();
       const existingFiles = localStore.getQuery(api.files.getFolderContents, {
         projectId,
         parentId,
+        token,
       });
 
       if (existingFiles !== undefined) {
         localStore.setQuery(
           api.files.getFolderContents,
-          { projectId, parentId },
+          { projectId, parentId, token },
           existingFiles.filter((file) => file._id !== args.id)
         );
       }
     }
   );
+
+  return async (args: { id: Id<"files"> }) => {
+    const token = getSessionToken();
+    return mutation({ ...args, token });
+  };
 };
 
 export const useFolderContents = ({
@@ -155,8 +191,9 @@ export const useFolderContents = ({
   parentId?: Id<"files">;
   enabled?: boolean;
 }) => {
+  const token = getSessionToken();
   return useQuery(
     api.files.getFolderContents,
-    enabled ? { projectId, parentId } : "skip",
+    enabled ? { projectId, parentId, token } : "skip",
   );
 };

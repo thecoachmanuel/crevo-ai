@@ -4,25 +4,31 @@ import { useMutation, useQuery } from "convex/react";
 
 import { api } from "../../../../convex/_generated/api";
 import { Id } from "../../../../convex/_generated/dataModel";
+import { getSessionToken } from "@/lib/client-auth";
 
 export const useProject = (projectId: Id<"projects">) => {
-  return useQuery(api.projects.getById, { id: projectId });
+  const token = getSessionToken();
+  return useQuery(api.projects.getById, { id: projectId, token });
 };
 
 export const useProjects = () => {
-  return useQuery(api.projects.get);
+  const token = getSessionToken();
+  return useQuery(api.projects.get, { token });
 };
 
 export const useProjectsPartial = (limit: number) => {
+  const token = getSessionToken();
   return useQuery(api.projects.getPartial, {
     limit,
+    token,
   });
 };
 
 export const useCreateProject = () => {
-  return useMutation(api.projects.create).withOptimisticUpdate(
+  const mutation = useMutation(api.projects.create).withOptimisticUpdate(
     (localStore, args) => {
-      const existingProjects = localStore.getQuery(api.projects.get);
+      const token = getSessionToken();
+      const existingProjects = localStore.getQuery(api.projects.get, { token });
 
       if (existingProjects !== undefined) {
         const now = Date.now();
@@ -34,27 +40,33 @@ export const useCreateProject = () => {
           updatedAt: now,
         };
 
-        localStore.setQuery(api.projects.get, {}, [
+        localStore.setQuery(api.projects.get, { token }, [
           newProject,
           ...existingProjects,
         ]);
       }
     }
-  )
+  );
+
+  return async (args: { name: string }) => {
+    const token = getSessionToken();
+    return mutation({ ...args, token });
+  };
 };
 
 export const useRenameProject = () => {
-  return useMutation(api.projects.rename).withOptimisticUpdate(
+  const mutation = useMutation(api.projects.rename).withOptimisticUpdate(
     (localStore, args) => {
+      const token = getSessionToken();
       const existingProject = localStore.getQuery(
         api.projects.getById,
-        { id: args.id }
+        { id: args.id, token }
       );
 
       if (existingProject !== undefined  && existingProject !== null) {
         localStore.setQuery(
           api.projects.getById,
-          { id: args.id },
+          { id: args.id, token },
           {
             ...existingProject,
             name: args.name,
@@ -63,12 +75,12 @@ export const useRenameProject = () => {
         );
       }
 
-      const existingProjects = localStore.getQuery(api.projects.get);
+      const existingProjects = localStore.getQuery(api.projects.get, { token });
 
       if (existingProjects !== undefined) {
         localStore.setQuery(
           api.projects.get,
-          {},
+          { token },
           existingProjects.map((project) => {
             return project._id === args.id
               ? { ...project, name: args.name, updatedAt: Date.now() }
@@ -77,9 +89,18 @@ export const useRenameProject = () => {
         );
       }
     }
-  )
+  );
+
+  return async (args: { id: Id<"projects">; name: string }) => {
+    const token = getSessionToken();
+    return mutation({ ...args, token });
+  };
 };
 
 export const useUpdateProjectSettings = () => {
-  return useMutation(api.projects.updateSettings);
+  const mutation = useMutation(api.projects.updateSettings);
+  return async (args: { id: Id<"projects">; settings: { installCommand?: string; devCommand?: string } }) => {
+    const token = getSessionToken();
+    return mutation({ ...args, token });
+  };
 };
