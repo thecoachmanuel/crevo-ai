@@ -38,7 +38,7 @@ export const SignInForm = () => {
         throw new Error(data.error || "Failed to authenticate");
       }
 
-      router.refresh(); // Refresh layout to pick up the new session cookie
+      window.location.reload(); // Hard reload to ensure AuthWrapper re-reads the cookie
     } catch (err: any) {
       console.error(err);
       setError(err.message || "Failed to authenticate. Please check your credentials.");
@@ -53,7 +53,7 @@ export const SignInForm = () => {
     try {
       const response = await fetch("/api/auth/demo", { method: "POST" });
       if (!response.ok) throw new Error("Failed to login as demo user");
-      router.refresh();
+      window.location.reload();
     } catch (err: any) {
       setError(err.message || "Failed to login as demo user");
       setIsLoading(false);
