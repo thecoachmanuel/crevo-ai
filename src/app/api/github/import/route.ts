@@ -57,7 +57,7 @@ export async function POST(request: Request) {
   const projectId = await convex.mutation(api.system.createProject, {
     internalKey,
     name: repo,
-    ownerId: userId,
+    ownerId: user._id,
   });
 
   const event = await inngest.send({

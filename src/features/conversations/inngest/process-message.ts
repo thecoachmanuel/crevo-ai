@@ -119,7 +119,7 @@ export const processMessage = inngest.createFunction(
         system: TITLE_GENERATOR_SYSTEM_PROMPT,
         model: process.env.GEMINI_API_KEY ? gemini({
           model: "gemini-2.0",
-          defaultParameters: { temperature: 0, max_tokens: 50 },
+          defaultParameters: { generationConfig: { temperature: 0, maxOutputTokens: 50 } },
         }) : anthropic({
           model: "claude-3-5-haiku-20241022",
           defaultParameters: { temperature: 0, max_tokens: 50 },
@@ -160,7 +160,7 @@ export const processMessage = inngest.createFunction(
       system: systemPrompt,
       model: process.env.GEMINI_API_KEY ? gemini({
         model: "gemini-2.0",
-        defaultParameters: { temperature: 0.3, max_tokens: 16000 }
+        defaultParameters: { generationConfig: { temperature: 0.3, maxOutputTokens: 16000 } }
       }) : anthropic({
         model: "claude-3-opus-20240229",
         defaultParameters: { temperature: 0.3, max_tokens: 16000 }
