@@ -93,7 +93,13 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ projectId });
   } catch (error: any) {
-    console.error("Create project error:", error);
+    console.error("Create project error:", {
+      message: error?.message,
+      name: error?.name,
+      stack: error?.stack?.split("\n")[0],
+      convexUrl: process.env.NEXT_PUBLIC_CONVEX_URL ? "SET" : "MISSING",
+      internalKey: process.env.POLARIS_CONVEX_INTERNAL_KEY ? "SET" : "MISSING",
+    });
     return NextResponse.json(
       { error: error?.message || "Failed to create project" },
       { status: 500 }
