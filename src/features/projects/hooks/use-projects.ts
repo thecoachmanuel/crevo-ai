@@ -31,7 +31,7 @@ export const useCreateProject = () => {
   const mutation = useMutation(api.projects.create).withOptimisticUpdate(
     (localStore, args) => {
       const token = getSessionToken();
-      const existingProjects = localStore.getQuery(api.projects.get, token ? { token } : "skip");
+      const existingProjects = localStore.getQuery(api.projects.get, { token });
 
       if (existingProjects !== undefined) {
         const now = Date.now();
@@ -65,7 +65,7 @@ export const useRenameProject = () => {
       const token = getSessionToken();
       const existingProject = localStore.getQuery(
         api.projects.getById,
-        token ? { id: args.id, token } : "skip"
+        { id: args.id, token }
       );
 
       if (existingProject !== undefined && existingProject !== null && token) {
@@ -80,7 +80,7 @@ export const useRenameProject = () => {
         );
       }
 
-      const existingProjects = localStore.getQuery(api.projects.get, token ? { token } : "skip");
+      const existingProjects = localStore.getQuery(api.projects.get, { token });
 
       if (existingProjects !== undefined && token) {
         localStore.setQuery(
