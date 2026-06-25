@@ -20,14 +20,26 @@ export async function POST(request: Request) {
     const saltRounds = 10;
     const passwordHash = await bcrypt.hash(password, saltRounds);
 
-    // 2. Call Convex to create the user and generate a session token
-    const sessionToken = await convex.mutation(api.users.registerWithEmail, {
-      email,
-      passwordHash,
-      name,
-    });
+    let sessionToken: string;
 
-    // 3. Set the session cookie (httpOnly: false so client Convex can read it)
+    try {
+      // 2. Try to create the user
+      sessionToken = await convex.mutation(api.users.registerWithEmail, {
+        email,
+        passwordHash,
+        name,
+      });
+    } catch (error: any) {
+      if (error.message?.includes("Email already in use")) {
+        return NextResponse.json(
+          { error: "An account with this email already exists. Please sign in instead." },
+          { status: 409 }
+        );
+      }
+      throw error;
+    }
+
+    // 3. Set the session cookie (httpOnly: false so client JS can read it for Convex)
     const cookieStore = await cookies();
     cookieStore.set("polaris_session", sessionToken, {
       httpOnly: false,
@@ -40,15 +52,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true });
   } catch (error: any) {
     console.error("Registration Error:", error);
-    if (error.message.includes("Email already in use")) {
-      return NextResponse.json(
-        { error: "Email already in use" },
-        { status: 409 }
-      );
-    }
     return NextResponse.json(
-      { error: "Failed to create account" },
+      { error: "Failed to create account. Please try again." },
       { status: 500 }
     );
   }
 }
+

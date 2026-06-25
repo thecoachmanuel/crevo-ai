@@ -3,7 +3,8 @@ import { api } from "../../convex/_generated/api";
 import { useEffect, useState } from "react";
 
 export function useCurrentUser() {
-  const [token, setToken] = useState<string | null>(null);
+  // undefined = "haven't checked yet" | string = "found a token" | null = "no token found"
+  const [token, setToken] = useState<string | null | undefined>(undefined);
 
   useEffect(() => {
     // Read the non-httpOnly cookie set by our auth callback
@@ -11,19 +12,27 @@ export function useCurrentUser() {
     if (match) {
       setToken(match[2]);
     } else {
-      setToken(null);
+      setToken(null); // definitively no token
     }
   }, []);
 
-  // Pass the token to our custom Convex query.
-  // We use `skip` if we haven't found a token yet, but we actually want to query with an undefined token if it's really missing, so it returns null.
-  const user = useQuery(api.users.current, token !== null ? { token } : "skip");
+  // Skip the Convex query until we've actually read the cookie
+  const user = useQuery(
+    api.users.current,
+    token !== undefined && token !== null ? { token } : "skip"
+  );
 
-  // If token is null, we definitively know there is no user logged in.
+  // Still checking the cookie — show loading
+  if (token === undefined) {
+    return { user: undefined, isLoading: true };
+  }
+
+  // Cookie was checked, no token found — definitely logged out
   if (token === null) {
     return { user: null, isLoading: false };
   }
 
+  // Token found, waiting for Convex to validate it
   return { 
     user, 
     isLoading: user === undefined 

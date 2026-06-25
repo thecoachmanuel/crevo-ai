@@ -11,10 +11,12 @@ const convex = new ConvexReactClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 const AuthWrapper = ({ children }: { children: React.ReactNode }) => {
   const { user, isLoading } = useCurrentUser();
 
+  // Show loading while we're checking the cookie OR validating session with Convex
   if (isLoading) {
     return <AuthLoadingView />;
   }
 
+  // No user — show login
   if (!user) {
     return <UnauthenticatedView />;
   }
