@@ -19,7 +19,10 @@ export const useMessages = (conversationId: Id<"conversations"> | null) => {
 
 export const useConversations = (projectId: Id<"projects">) => {
   const token = getSessionToken();
-  return useQuery(api.conversations.getByProject, { projectId, token });
+  return useQuery(
+    api.conversations.getByProject,
+    token ? { projectId, token } : "skip"
+  );
 };
 
 export const useCreateConversation = () => {

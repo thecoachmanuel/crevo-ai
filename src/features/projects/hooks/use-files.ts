@@ -16,17 +16,17 @@ const sortFiles = <T extends { type: "file" | "folder"; name: string }>(
 
 export const useFiles = (projectId: Id<"projects"> | null) => {
   const token = getSessionToken();
-  return useQuery(api.files.getFiles, projectId ? { projectId, token } : "skip");
+  return useQuery(api.files.getFiles, projectId && token ? { projectId, token } : "skip");
 };
 
 export const useFile = (fileId: Id<"files"> | null) => {
   const token = getSessionToken();
-  return useQuery(api.files.getFile, fileId ? { id: fileId, token } : "skip");
+  return useQuery(api.files.getFile, fileId && token ? { id: fileId, token } : "skip");
 };
 
 export const useFilePath = (fileId: Id<"files"> | null) => {
   const token = getSessionToken();
-  return useQuery(api.files.getFilePath, fileId ? { id: fileId, token } : "skip");
+  return useQuery(api.files.getFilePath, fileId && token ? { id: fileId, token } : "skip");
 };
 
 export const useUpdateFile = () => {
@@ -194,6 +194,6 @@ export const useFolderContents = ({
   const token = getSessionToken();
   return useQuery(
     api.files.getFolderContents,
-    enabled ? { projectId, parentId, token } : "skip",
+    enabled && token ? { projectId, parentId, token } : "skip",
   );
 };

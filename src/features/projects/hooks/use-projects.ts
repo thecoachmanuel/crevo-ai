@@ -8,27 +8,30 @@ import { getSessionToken } from "@/lib/client-auth";
 
 export const useProject = (projectId: Id<"projects">) => {
   const token = getSessionToken();
-  return useQuery(api.projects.getById, { id: projectId, token });
+  return useQuery(
+    api.projects.getById,
+    token ? { id: projectId, token } : "skip"
+  );
 };
 
 export const useProjects = () => {
   const token = getSessionToken();
-  return useQuery(api.projects.get, { token });
+  return useQuery(api.projects.get, token ? { token } : "skip");
 };
 
 export const useProjectsPartial = (limit: number) => {
   const token = getSessionToken();
-  return useQuery(api.projects.getPartial, {
-    limit,
-    token,
-  });
+  return useQuery(
+    api.projects.getPartial,
+    token ? { limit, token } : "skip"
+  );
 };
 
 export const useCreateProject = () => {
   const mutation = useMutation(api.projects.create).withOptimisticUpdate(
     (localStore, args) => {
       const token = getSessionToken();
-      const existingProjects = localStore.getQuery(api.projects.get, { token });
+      const existingProjects = localStore.getQuery(api.projects.get, token ? { token } : "skip");
 
       if (existingProjects !== undefined) {
         const now = Date.now();
@@ -40,10 +43,12 @@ export const useCreateProject = () => {
           updatedAt: now,
         };
 
-        localStore.setQuery(api.projects.get, { token }, [
-          newProject,
-          ...existingProjects,
-        ]);
+        if (token) {
+          localStore.setQuery(api.projects.get, { token }, [
+            newProject,
+            ...existingProjects,
+          ]);
+        }
       }
     }
   );
@@ -60,10 +65,10 @@ export const useRenameProject = () => {
       const token = getSessionToken();
       const existingProject = localStore.getQuery(
         api.projects.getById,
-        { id: args.id, token }
+        token ? { id: args.id, token } : "skip"
       );
 
-      if (existingProject !== undefined  && existingProject !== null) {
+      if (existingProject !== undefined && existingProject !== null && token) {
         localStore.setQuery(
           api.projects.getById,
           { id: args.id, token },
@@ -75,16 +80,16 @@ export const useRenameProject = () => {
         );
       }
 
-      const existingProjects = localStore.getQuery(api.projects.get, { token });
+      const existingProjects = localStore.getQuery(api.projects.get, token ? { token } : "skip");
 
-      if (existingProjects !== undefined) {
+      if (existingProjects !== undefined && token) {
         localStore.setQuery(
           api.projects.get,
           { token },
           existingProjects.map((project) => {
             return project._id === args.id
               ? { ...project, name: args.name, updatedAt: Date.now() }
-              : project
+              : project;
           })
         );
       }

@@ -20,75 +20,84 @@ const requestSchema = z.object({
 });
 
 export async function POST(request: Request) {
-  const user = await getAuthUser(request);
+  try {
+    const user = await getAuthUser(request);
 
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-  const userId = user._id;
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
-  const internalKey = process.env.POLARIS_CONVEX_INTERNAL_KEY;
+    const userId = user._id;
+    // Use empty string if key not set — Convex backend bypasses validation gracefully
+    const internalKey = process.env.POLARIS_CONVEX_INTERNAL_KEY || "";
 
-  if (!internalKey) {
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+    }
+
+    const { prompt } = requestSchema.parse(body);
+
+    // Generate a random project name
+    const projectName = uniqueNamesGenerator({
+      dictionaries: [adjectives, animals, colors],
+      separator: "-",
+      length: 3,
+    });
+
+    // Create project and conversation together
+    const { projectId, conversationId } = await convex.mutation(
+      api.system.createProjectWithConversation,
+      {
+        internalKey,
+        projectName,
+        conversationTitle: DEFAULT_CONVERSATION_TITLE,
+        ownerId: userId,
+      },
+    );
+
+    // Create user message
+    await convex.mutation(api.system.createMessage, {
+      internalKey,
+      conversationId,
+      projectId,
+      role: "user",
+      content: prompt,
+    });
+
+    // Create assistant message placeholder with processing status
+    const assistantMessageId = await convex.mutation(
+      api.system.createMessage,
+      {
+        internalKey,
+        conversationId,
+        projectId,
+        role: "assistant",
+        content: "",
+        status: "processing",
+      },
+    );
+
+    // Trigger Inngest to process the message
+    await inngest.send({
+      name: "message/sent",
+      data: {
+        messageId: assistantMessageId,
+        conversationId,
+        projectId,
+        message: prompt,
+      },
+    });
+
+    return NextResponse.json({ projectId });
+  } catch (error: any) {
+    console.error("Create project error:", error);
     return NextResponse.json(
-      { error: "Internal key not configured" },
+      { error: error?.message || "Failed to create project" },
       { status: 500 }
     );
   }
+}
 
-  const body = await request.json();
-  const { prompt } = requestSchema.parse(body);
-
-  // Generate a random project name
-  const projectName = uniqueNamesGenerator({
-    dictionaries: [adjectives, animals, colors],
-    separator: "-",
-    length: 3,
-  });
-
-  // Create project and conversation together
-  const { projectId, conversationId } = await convex.mutation(
-    api.system.createProjectWithConversation,
-    {
-      internalKey,
-      projectName,
-      conversationTitle: DEFAULT_CONVERSATION_TITLE,
-      ownerId: userId,
-    },
-  );
-
-  // Create user message
-  await convex.mutation(api.system.createMessage, {
-    internalKey,
-    conversationId,
-    projectId,
-    role: "user",
-    content: prompt,
-  });
-
-  // Create assistant message placeholder with processing status
-  const assistantMessageId = await convex.mutation(
-    api.system.createMessage,
-    {
-      internalKey,
-      conversationId,
-      projectId,
-      role: "assistant",
-      content: "",
-      status: "processing",
-    },
-  );
-
-  // Trigger Inngest to process the message
-  await inngest.send({
-    name: "message/sent",
-    data: {
-      messageId: assistantMessageId,
-      conversationId,
-      projectId,
-      message: prompt,
-    },
-  });
-
-  return NextResponse.json({ projectId });
-};
